@@ -44,6 +44,18 @@ f. Understand the demographic characteristics of different customer groups
 
 The goal of this project was therefore to transform transaction data into actionable customer segments.
 
+# Dashboards Preview
+
+Customer Demographics
+![Customer Demographics](./Customer_Demographics.png)
+
+Customer Segmentation
+![Customer Segmentation](./Customer_Segmentation.png)
+
+Customer Insights & Actions
+![Customer Insights and Actions](./Customer_Insights_&_Action.png)
+
+
 # Project Objectives
 
 The analysis aimed to:
@@ -726,9 +738,16 @@ Recommend higher-value products or related products to increase their spending a
 
 **6. Needs Attention and Promising: Keep them engaged**
 
-These customers are in the middle and do not show an immediate high risk or high value pattern.
+These customers are in the middle and do not show an immediate high-risk or high-value pattern.
 
 Use regular but simple communication, such as product recommendations or occasional offers, to keep them engaged and prevent them from becoming inactive.
+
+# Project File
+
+**To view the full workflow, download the pbix file below:**
+
+[Download Customer_Dashboard.pbix](Customer_Segmentation_Using_RFM_Analysis.pbix) 
+
 
 
 
