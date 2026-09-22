@@ -1,4 +1,4 @@
-# Syntecxhub_-Customer-Segmentation-Using-RFM-Analysis
+# Syntecxhub_Customer Segmentation Using RFM Analysis
 
 # Project Overview
 
