@@ -270,16 +270,18 @@ The model follows a star-schema approach, with FactInternetSales acting as the c
 
 The key relationships include:
 
-                  DimCustomer
+                       DimCustomer ────────┐
+                       │                   │
+                       │ CustomerKey       │ GeographyKey
+                       ▼                   ▼
+DimProduct ─────► FactInternetSales   DimGeography
+                       │                   │
+                       │ SalesTerritoryKey │ SalesTerritoryKey
+                       ▼                   │
+                 DimSalesTerritory ◄────────┘
+                       ▲
                        │
-                       │ CustomerKey
-                       ▼
-DimProduct ─────► FactInternetSales ◄───── DimDate
-                       │
-                       │
-              ┌────────┴────────┐
-              ▼                 ▼
-        DimGeography      DimSalesTerritory
+                    DimDate
 
 
 
@@ -293,67 +295,19 @@ The RFM Customers calculated table creates one row per customer and calculates t
 
 RFM Customers = 
 
-VAR RefDate =
-
-    CALCULATE(
-    
-        MAX(FactInternetSales[OrderDate]),
-        
-        ALL(FactInternetSales)
-    )
+VAR RefDate = CALCULATE(MAX(FactInternetSales[OrderDate]), ALL(FactInternetSales))
 
 RETURN
 
 ADDCOLUMNS(
 
-    SUMMARIZE(
-    
-        FactInternetSales,
-        
-        FactInternetSales[CustomerKey]
-    ),
-
-    "Last Purchase Date",
-    
-        CALCULATE(
-        
-            MAX(FactInternetSales[OrderDate])
-            
-        ),
-
-    "Frequency",
-    
-        CALCULATE(
-        
-            DISTINCTCOUNT(FactInternetSales[SalesOrderNumber])
-            
-        ),
-
-    "Monetary",
-    
-        CALCULATE(
-        
-            SUM(FactInternetSales[SalesAmount])
-            
-        ),
-
-    "Recency (Days)",
-    
-        DATEDIFF(
-        
-            CALCULATE(
-            
-                MAX(FactInternetSales[OrderDate])
-                
-            ),
-            
-            RefDate,
-            
-            DAY
-        )
+    SUMMARIZE(FactInternetSales, FactInternetSales[CustomerKey]),
+    "Full Name", LOOKUPVALUE(DimCustomer[FullName], DimCustomer[CustomerKey], FactInternetSales[CustomerKey]),
+    "Last Purchase Date", CALCULATE(MAX(FactInternetSales[OrderDate])),
+    "Frequency", CALCULATE(DISTINCTCOUNT(FactInternetSales[SalesOrderNumber])),
+    "Monetary", CALCULATE(SUM(FactInternetSales[SalesAmount])),
+    "Recency (Days)", DATEDIFF(CALCULATE(MAX(FactInternetSales[OrderDate])), RefDate, DAY)
 )
-
-
 ** SEGMENT LOOKUP Table**
 
 The Segment Lookup table contains the business definitions and recommended actions for each RFM segment.
@@ -600,11 +554,27 @@ The scoring principle is:
 
 Because lower Recency is better:
 
+R Score = 
+
+VAR CustomerRank = RANKX(ALL('RFM Customers'), 'RFM Customers'[Recency (Days)], , ASC)
+
+VAR TotalCustomers = COUNTROWS(ALL('RFM Customers'))
+
+RETURN 6 - ROUNDUP(CustomerRank / (TotalCustomers / 5), 0)
+
 More recent purchase → Higher score
 
 **Frequency Score**
 
 Because higher Frequency indicates more purchasing activity:
+
+F Score = 
+
+VAR CustomerRank = RANKX(ALL('RFM Customers'), 'RFM Customers'[Frequency], , ASC)
+
+VAR TotalCustomers = COUNTROWS(ALL('RFM Customers'))
+
+RETURN ROUNDUP(CustomerRank / (TotalCustomers / 5), 0)
 
 More purchases → Higher score
 
@@ -613,6 +583,14 @@ Fewer purchases → Lower score
 **Monetary Score**
 
 Because higher Monetary value indicates greater revenue contribution:
+
+M Score = 
+
+VAR CustomerRank = RANKX(ALL('RFM Customers'), 'RFM Customers'[Monetary], , ASC)
+
+VAR TotalCustomers = COUNTROWS(ALL('RFM Customers'))
+
+RETURN ROUNDUP(CustomerRank / (TotalCustomers / 5), 0)
 
 Higher spending → Higher score
 
@@ -630,21 +608,15 @@ Champions
 
 Loyal
 
-Potential Loyalist
-
 Promising
 
 New Customers
-
-About To Sleep
 
 At Risk
 
 Cannot Lose Them
 
 Hibernating Customers
-
-Lost Customers
 
 Need Attention
 
